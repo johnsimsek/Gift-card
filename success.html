@@ -1,0 +1,380 @@
+<!-- FILE: success.html -->
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kiitos | InkyVibes Tattoo</title>
+  <style>
+    :root {
+      --bg-1: #f6f6f6;
+      --bg-2: #ececec;
+      --text: #111;
+      --muted: #666;
+      --panel: rgba(255,255,255,0.94);
+      --shadow: 0 18px 46px rgba(0,0,0,0.10);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 20% 18%, rgba(255,255,255,0.9), transparent 22%),
+        radial-gradient(circle at 80% 75%, rgba(255,255,255,0.8), transparent 18%),
+        linear-gradient(180deg, var(--bg-1), var(--bg-2));
+    }
+
+    .card {
+      width: min(100%, 620px);
+      background: var(--panel);
+      border: 1px solid rgba(0,0,0,0.06);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 28px 24px;
+      text-align: center;
+    }
+
+    .check-wrap {
+      width: 96px;
+      height: 96px;
+      margin: 0 auto 18px;
+      position: relative;
+      display: grid;
+      place-items: center;
+    }
+
+    .check-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.98), rgba(206,255,221,0.94) 36%, rgba(26,179,90,0.16) 100%);
+      box-shadow:
+        0 12px 26px rgba(33, 166, 84, 0.20),
+        inset 0 1px 0 rgba(255,255,255,0.85);
+      animation: popIn 0.7s ease-out forwards, softPulse 2.4s ease-in-out infinite 0.7s;
+    }
+
+    .check-mark {
+      position: relative;
+      width: 42px;
+      height: 22px;
+      border-left: 6px solid #0d8c43;
+      border-bottom: 6px solid #0d8c43;
+      transform: rotate(-45deg) scale(0.7);
+      opacity: 0;
+      animation: tickIn 0.45s ease-out forwards 0.45s;
+      z-index: 2;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(28px, 5vw, 42px);
+    }
+
+    .summary {
+      margin-top: 22px;
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.8);
+      border: 1px solid rgba(0,0,0,0.06);
+      text-align: left;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 6px 0;
+      font-size: 15px;
+    }
+
+    .row strong {
+      text-align: right;
+      word-break: break-word;
+    }
+
+    .gift-preview {
+      margin-top: 18px;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(0,0,0,0.06);
+      background: #f4f4f4;
+    }
+
+    .gift-preview img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .small {
+      margin-top: 14px;
+      font-size: 13px;
+      color: #777;
+      line-height: 1.6;
+    }
+
+    @keyframes popIn {
+      0% {
+        transform: scale(0.6);
+        opacity: 0;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes tickIn {
+      0% {
+        opacity: 0;
+        transform: rotate(-45deg) scale(0.4);
+      }
+      100% {
+        opacity: 1;
+        transform: rotate(-45deg) scale(1);
+      }
+    }
+
+    @keyframes softPulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.05);
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="check-wrap">
+      <div class="check-ring"></div>
+      <div class="check-mark"></div>
+    </div>
+
+    <h1>Kiitos ostoksestasi!</h1>
+
+    <section class="summary" id="summaryBox" hidden>
+      <div class="row"><span>Summa</span><strong id="sumAmount">-</strong></div>
+      <div class="row"><span>Saaja</span><strong id="sumRecipient">-</strong></div>
+      <div class="row"><span>Antaja</span><strong id="sumSender">-</strong></div>
+      <div class="row"><span>Ostopäivä</span><strong id="sumPurchase">-</strong></div>
+      <div class="row"><span>Voimassa asti</span><strong id="sumExpiry">-</strong></div>
+    </section>
+
+    <section class="gift-preview" id="giftPreviewBox" hidden>
+      <img id="giftPreviewImage" alt="Gift card preview" />
+    </section>
+
+    <p class="small" id="statusText">Vahvistus lähetetään ostajalle, saajalle ja InkyVibesille.</p>
+  </main>
+
+  <script>
+    const APPS_SCRIPT_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbySYuTOq1397ylsdsZp489EYK3hLGVDfquWaEayMvcyRsLE4VmLb2oA20OgzfzvgqPA/exec";
+
+    const summaryBox = document.getElementById("summaryBox");
+    const sumAmount = document.getElementById("sumAmount");
+    const sumRecipient = document.getElementById("sumRecipient");
+    const sumSender = document.getElementById("sumSender");
+    const sumPurchase = document.getElementById("sumPurchase");
+    const sumExpiry = document.getElementById("sumExpiry");
+    const giftPreviewBox = document.getElementById("giftPreviewBox");
+    const giftPreviewImage = document.getElementById("giftPreviewImage");
+    const statusText = document.getElementById("statusText");
+
+    function loadOrder() {
+      try {
+        const raw = localStorage.getItem("inkyvibesGiftCardOrder");
+        if (!raw) {
+          return null;
+        }
+
+        const parsed = JSON.parse(raw);
+        const createdAt = Number(parsed.createdAt || 0);
+        const maxAge = 1000 * 60 * 60 * 6;
+
+        if (!createdAt || Date.now() - createdAt > maxAge) {
+          localStorage.removeItem("inkyvibesGiftCardOrder");
+          return null;
+        }
+
+        return parsed;
+      } catch {
+        return null;
+      }
+    }
+
+    function renderOrder(order) {
+      if (!order) {
+        statusText.textContent = "Tilaustietoa ei löytynyt.";
+        return;
+      }
+
+      summaryBox.hidden = false;
+      sumAmount.textContent = order.amount || "-";
+      sumRecipient.textContent = order.recipient || "-";
+      sumSender.textContent = order.sender || "-";
+      sumPurchase.textContent = order.purchaseDate || "-";
+      sumExpiry.textContent = order.expiryDate || "-";
+    }
+
+    function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    function drawText(ctx, text, x, y, width, fontSize, align = "left") {
+      ctx.save();
+      ctx.font = `700 ${fontSize}px Georgia, serif`;
+      ctx.fillStyle = "#4a4a4a";
+      ctx.textBaseline = "top";
+      ctx.textAlign = align;
+
+      const safeText = String(text || "");
+      const fitted = safeText.length > 18 ? safeText.slice(0, 18) : safeText;
+      const drawX = align === "right" ? x + width : x;
+
+      ctx.fillText(fitted, drawX, y, width);
+      ctx.restore();
+    }
+
+    async function createGiftCardImage(order) {
+      const src = order.cardImageSrc || "inkvibesgiftcard.jpg";
+      const img = await loadImage(src);
+
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+
+      drawText(
+        ctx,
+        order.recipient || "",
+        canvas.width * 0.205,
+        canvas.height * 0.507,
+        canvas.width * 0.257,
+        Math.round(canvas.width * 0.027)
+      );
+
+      drawText(
+        ctx,
+        order.sender || "",
+        canvas.width * 0.205,
+        canvas.height * 0.625,
+        canvas.width * 0.257,
+        Math.round(canvas.width * 0.027)
+      );
+
+      drawText(
+        ctx,
+        order.expiryDate || "",
+        canvas.width * 0.412,
+        canvas.height * 0.741,
+        canvas.width * 0.215,
+        Math.round(canvas.width * 0.022)
+      );
+
+      drawText(
+        ctx,
+        order.amount || "",
+        canvas.width * 0.772,
+        canvas.height * 0.852,
+        canvas.width * 0.115,
+        Math.round(canvas.width * 0.031),
+        "right"
+      );
+
+      return canvas.toDataURL("image/png");
+    }
+
+    async function sendOrderEmail(order, cardImageDataUrl) {
+      if (!order || !APPS_SCRIPT_WEB_APP_URL) {
+        statusText.textContent = "Apps Script URL puuttuu.";
+        return;
+      }
+
+      const sentKey = `inkyvibes_email_sent_${order.orderToken || "default"}`;
+      if (localStorage.getItem(sentKey) === "1") {
+        statusText.textContent = "Vahvistus on jo lähetetty.";
+        return;
+      }
+
+      const payload = {
+        ...order,
+        cardImageBase64: cardImageDataUrl ? cardImageDataUrl.split(",")[1] : "",
+        cardImageMimeType: "image/png",
+        cardImageFileName: "inkyvibes-gift-card.png"
+      };
+
+      statusText.textContent = "Lähetetään vahvistusviestejä...";
+
+      try {
+        const response = await fetch(APPS_SCRIPT_WEB_APP_URL, {
+          method: "POST",
+          redirect: "follow",
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const text = await response.text();
+        let result;
+
+        try {
+          result = JSON.parse(text);
+        } catch {
+          result = { ok: false, message: text };
+        }
+
+        if (!result.ok) {
+          throw new Error(result.message || "Tuntematon virhe");
+        }
+
+        localStorage.setItem(sentKey, "1");
+        statusText.textContent = "Vahvistus lähetetty ostajalle, saajalle ja InkyVibesille.";
+      } catch (error) {
+        console.error("Email send failed:", error);
+        statusText.textContent = "Viestin lähetys epäonnistui: " + (error.message || "unknown");
+      }
+    }
+
+    async function main() {
+      const order = loadOrder();
+      renderOrder(order);
+
+      if (!order) {
+        return;
+      }
+
+      try {
+        const cardImageDataUrl = await createGiftCardImage(order);
+        giftPreviewImage.src = cardImageDataUrl;
+        giftPreviewBox.hidden = false;
+        await sendOrderEmail(order, cardImageDataUrl);
+      } catch (error) {
+        console.error("Preview create failed:", error);
+        await sendOrderEmail(order, "");
+      }
+    }
+
+    main();
+  </script>
+</body>
+</html>
