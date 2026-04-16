@@ -1,0 +1,1024 @@
+<!-- /gift-card.html -->
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InkyVibes Tattoo | Lahjakortti</title>
+  <style>
+    :root {
+      --bg-1: #efefef;
+      --bg-2: #e4e4e4;
+      --panel: rgba(255, 255, 255, 0.94);
+      --panel-border: rgba(0, 0, 0, 0.08);
+      --text: #111;
+      --muted: #666;
+      --shadow-soft: 0 16px 40px rgba(0, 0, 0, 0.08);
+      --shadow-card: 0 26px 60px rgba(0, 0, 0, 0.16);
+      --radius-xl: 28px;
+      --radius-md: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+    }
+
+    body {
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(circle at 14% 18%, rgba(255,255,255,0.72) 0, rgba(255,255,255,0.4) 13%, transparent 14%),
+        radial-gradient(circle at 82% 72%, rgba(255,255,255,0.62) 0, rgba(255,255,255,0.32) 11%, transparent 12%),
+        linear-gradient(180deg, var(--bg-1), var(--bg-2));
+      overflow-x: hidden;
+    }
+
+    .page {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 22px 14px 42px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(10px);
+    }
+
+    .preview-panel,
+    .form-panel {
+      padding: 18px;
+    }
+
+    .form-panel {
+      position: sticky;
+      top: 16px;
+    }
+
+    .panel-title {
+      margin: 0 0 14px;
+      font-size: 22px;
+      font-weight: 800;
+    }
+
+    .preview-description {
+      margin: 0 0 18px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+
+    .gift-card-shell {
+      position: relative;
+      border-radius: 38px;
+      perspective: 2200px;
+      box-shadow: var(--shadow-card);
+      transform: translateZ(0);
+      touch-action: manipulation;
+      animation: cardBeat 4.4s ease-in-out infinite;
+      overflow: visible;
+    }
+
+    .gift-card-stage {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1536 / 879;
+      min-width: 320px;
+      border-radius: 38px;
+      transform-style: preserve-3d;
+      container-type: inline-size;
+      animation: stageFloat 7.8s ease-in-out infinite;
+      will-change: transform;
+      overflow: hidden;
+      background: #f0f0f0;
+    }
+
+    .gift-card-rotator {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transform: rotateY(0deg);
+      transition: transform 1.45s cubic-bezier(0.22, 0.74, 0.18, 1);
+      will-change: transform;
+    }
+
+    .gift-card-face {
+      position: absolute;
+      inset: 0;
+      border-radius: 38px;
+      overflow: hidden;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      background: #fff;
+    }
+
+    .gift-card-face--front {
+      transform: rotateY(0deg);
+    }
+
+    .gift-card-face--back {
+      transform: rotateY(180deg);
+    }
+
+    .gift-card-image {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .card-shine {
+      position: absolute;
+      inset: -10%;
+      pointer-events: none;
+      background: linear-gradient(
+        110deg,
+        rgba(255,255,255,0) 28%,
+        rgba(255,255,255,0.01) 38%,
+        rgba(255,255,255,0.05) 49%,
+        rgba(255,255,255,0.015) 58%,
+        rgba(255,255,255,0) 68%
+      );
+      transform: translate3d(-140%, 0, 0);
+      animation: shimmer 7s ease-in-out infinite;
+      mix-blend-mode: screen;
+      z-index: 2;
+    }
+
+    .spark-layer,
+    .pulse-ring-layer {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      border-radius: 38px;
+    }
+
+    .spark-layer {
+      z-index: 9;
+    }
+
+    .pulse-ring-layer {
+      z-index: 8;
+    }
+
+    .spark {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      width: var(--size);
+      height: var(--size);
+      border-radius: 999px;
+      background: radial-gradient(
+        circle,
+        rgba(255,255,255,1) 0%,
+        rgba(255,255,255,0.98) 34%,
+        rgba(255,255,255,0.62) 58%,
+        rgba(255,255,255,0) 100%
+      );
+      box-shadow:
+        0 0 10px rgba(255,255,255,0.98),
+        0 0 22px rgba(255,255,255,0.78),
+        0 0 42px rgba(255,255,255,0.42);
+      animation: sparkFall var(--dur) ease-out forwards;
+      will-change: transform, opacity;
+    }
+
+    .spark--star {
+      clip-path: polygon(
+        50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 92%,
+        50% 70%, 21% 92%, 32% 57%, 2% 35%, 39% 35%
+      );
+    }
+
+    .pulse-ring {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      border: 2px solid rgba(255,255,255,0.95);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.12),
+        0 0 18px rgba(255,255,255,0.72),
+        0 0 34px rgba(255,255,255,0.42);
+      transform: translate(-50%, -50%) scale(0.2);
+      opacity: 0.95;
+      animation: pulseRing var(--dur) cubic-bezier(0.15, 0.7, 0.15, 1) forwards;
+      animation-delay: var(--delay);
+      will-change: transform, opacity;
+    }
+
+    .card-text {
+      position: absolute;
+      z-index: 6;
+      font-family: Georgia, "Times New Roman", serif;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      line-height: 1.05;
+      text-rendering: geometricPrecision;
+      -webkit-font-smoothing: antialiased;
+      background: linear-gradient(
+        180deg,
+        #2d2d2d 0%,
+        #5c5c5c 24%,
+        #383838 48%,
+        #7a7a7a 68%,
+        #2a2a2a 100%
+      );
+      background-size: 100% 220%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: metallicFlow 5.2s ease-in-out infinite;
+    }
+
+    .name-value {
+      display: inline-block;
+      width: max-content;
+      max-width: none;
+      white-space: nowrap;
+      overflow: visible;
+      text-overflow: clip;
+      word-break: keep-all;
+      overflow-wrap: normal;
+      hyphens: none;
+      line-height: 0.9;
+    }
+
+    .recipient-value,
+    .sender-value {
+      left: 20.5%;
+      width: auto;
+      max-width: none;
+      text-align: left;
+      font-size: clamp(15px, 2.8cqw, 36px);
+    }
+
+    .recipient-value {
+      top: 50.7%;
+    }
+
+    .sender-value {
+      top: 62.5%;
+    }
+
+    .expiry-value {
+      left: 41.3%;
+      top: 75.1%;
+      width: 19%;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(12px, 1.7cqw, 21px);
+    }
+
+    .amount-value {
+      right: 12%;
+      bottom: 8%;
+      min-width: 10%;
+      text-align: right;
+      white-space: nowrap;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+      font-size: clamp(15px, 2cqw, 28px);
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .field label {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .field input,
+    .btn {
+      width: 100%;
+      border: 1px solid rgba(0,0,0,0.1);
+      border-radius: var(--radius-md);
+      padding: 14px 15px;
+      font: inherit;
+      color: var(--text);
+      background: rgba(255,255,255,0.98);
+    }
+
+    .field input:focus {
+      outline: 2px solid #111;
+      outline-offset: 1px;
+      border-color: #111;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .amount-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      max-height: 280px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .amount-btn {
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, color 0.15s ease;
+    }
+
+    .amount-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px rgba(0, 0, 0, 0.08);
+    }
+
+    .amount-btn.active {
+      background: #111;
+      color: #fff;
+      border-color: #111;
+    }
+
+    .summary {
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 18px;
+      padding: 16px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.76));
+    }
+
+    .summary-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 6px 0;
+      font-size: 15px;
+    }
+
+    .summary-row.total {
+      margin-top: 8px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(0,0,0,0.08);
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .purchase-btn {
+      cursor: pointer;
+      border: none;
+      border-radius: 18px;
+      padding: 17px 18px;
+      font-weight: 800;
+      font-size: 16px;
+      color: #fff;
+      background: linear-gradient(180deg, #181818, #050505);
+      box-shadow: 0 14px 24px rgba(0, 0, 0, 0.18);
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    .purchase-btn:hover {
+      transform: translateY(-1px);
+      opacity: 0.98;
+    }
+
+    .error-text {
+      display: none;
+      color: #8f1d1d;
+      background: rgba(255, 241, 241, 0.95);
+      border: 1px solid rgba(143, 29, 29, 0.15);
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    @keyframes stageFloat {
+      0%, 100% { transform: translate3d(0, 0, 0) rotateZ(0deg); }
+      25% { transform: translate3d(0, -3px, 0) rotateZ(-0.15deg); }
+      50% { transform: translate3d(0, -1px, 0) rotateZ(0.12deg); }
+      75% { transform: translate3d(0, -4px, 0) rotateZ(-0.12deg); }
+    }
+
+    @keyframes cardBeat {
+      0%, 100% { transform: scale(1); }
+      8% { transform: scale(1.006); }
+      16% { transform: scale(1); }
+      24% { transform: scale(1.01); }
+      32% { transform: scale(1); }
+    }
+
+    @keyframes shimmer {
+      0% { transform: translate3d(-140%, 0, 0); }
+      45% { transform: translate3d(140%, 0, 0); }
+      100% { transform: translate3d(140%, 0, 0); }
+    }
+
+    @keyframes metallicFlow {
+      0%, 100% { background-position: 50% 0%; }
+      50% { background-position: 50% 100%; }
+    }
+
+    @keyframes sparkFall {
+      0% {
+        transform: translate3d(0, 0, 0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translate3d(var(--dx), var(--dy), 0) scale(0.18) rotate(240deg);
+        opacity: 0;
+      }
+    }
+
+    @keyframes pulseRing {
+      0% {
+        transform: translate(-50%, -50%) scale(0.2);
+        opacity: 0.95;
+      }
+      70% {
+        opacity: 0.35;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(var(--scale));
+        opacity: 0;
+      }
+    }
+
+    @media (max-width: 1120px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .form-panel {
+        position: static;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .page {
+        padding: 16px 12px 34px;
+      }
+
+      .preview-panel,
+      .form-panel {
+        padding: 16px;
+      }
+
+      .grid-2,
+      .amount-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .recipient-value,
+      .sender-value {
+        left: 20.8%;
+        width: auto;
+      }
+
+      .recipient-value {
+        top: 51%;
+      }
+
+      .sender-value {
+        top: 62.8%;
+      }
+
+      .expiry-value {
+        left: 41.5%;
+        top: 75.3%;
+      }
+
+      .amount-value {
+        right: 12.3%;
+        bottom: 8.1%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .grid-2,
+      .amount-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .recipient-value,
+      .sender-value {
+        left: 20.9%;
+        width: auto;
+        font-size: clamp(14px, 2.9cqw, 30px);
+      }
+
+      .recipient-value {
+        top: 51.2%;
+      }
+
+      .sender-value {
+        top: 63%;
+      }
+
+      .expiry-value {
+        left: 41.7%;
+        top: 75.45%;
+        font-size: clamp(10px, 1.55cqw, 17px);
+      }
+
+      .amount-value {
+        right: 12.5%;
+        bottom: 8.2%;
+        font-size: clamp(13px, 1.95cqw, 23px);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .gift-card-shell,
+      .gift-card-stage,
+      .card-shine,
+      .card-text,
+      .spark,
+      .pulse-ring {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="layout">
+      <section class="panel preview-panel">
+        <h2 class="panel-title">Kortin esikatselu</h2>
+        <p class="preview-description">
+          Etsitkö todella ikimuistoista lahjaa? Tatuointi lahjakorttimme tarjoavat
+          unohtumattoman lahjan. Älä missaa, hanki tatuointilahjakortti jo tänään ja
+          anna ikuinen ja ikimuistoinen lahja.
+        </p>
+
+        <div class="gift-card-shell" id="giftCardShell">
+          <div class="gift-card-stage">
+            <div class="gift-card-rotator" id="giftCardRotator">
+              <div class="gift-card-face gift-card-face--front">
+                <img class="gift-card-image" src="inkvibesgiftcard.jpg" alt="InkyVibes gift card" />
+                <div class="card-text name-value recipient-value" data-preview="recipient"></div>
+                <div class="card-text name-value sender-value" data-preview="sender"></div>
+                <div class="card-text expiry-value" data-preview="expiry"></div>
+                <div class="card-text amount-value" data-preview="amount">125</div>
+                <div class="card-shine"></div>
+                <div class="pulse-ring-layer"></div>
+                <div class="spark-layer"></div>
+              </div>
+
+              <div class="gift-card-face gift-card-face--back">
+                <img class="gift-card-image" src="inkvibesgiftcard.jpg" alt="InkyVibes gift card" />
+                <div class="card-text name-value recipient-value" data-preview="recipient"></div>
+                <div class="card-text name-value sender-value" data-preview="sender"></div>
+                <div class="card-text expiry-value" data-preview="expiry"></div>
+                <div class="card-text amount-value" data-preview="amount">125</div>
+                <div class="card-shine"></div>
+                <div class="pulse-ring-layer"></div>
+                <div class="spark-layer"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel form-panel">
+        <h2 class="panel-title">Täytä kortin tiedot</h2>
+
+        <form id="giftCardForm" class="form-grid">
+          <div class="field">
+            <label for="recipient">Saaja</label>
+            <input id="recipient" name="recipient" type="text" maxlength="48" placeholder="Saajan nimi" />
+          </div>
+
+          <div class="field">
+            <label for="sender">Antaja</label>
+            <input id="sender" name="sender" type="text" maxlength="48" placeholder="Antajan nimi" />
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label for="buyerEmail">Ostajan sähköposti</label>
+              <input id="buyerEmail" name="buyerEmail" type="email" placeholder="nimi@email.com" required />
+            </div>
+
+            <div class="field">
+              <label for="recipientEmail">Saajan sähköposti (valinnainen)</label>
+              <input id="recipientEmail" name="recipientEmail" type="email" placeholder="saaja@email.com" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Valitse summa</label>
+            <div class="amount-grid" id="amountGrid"></div>
+          </div>
+
+          <div class="summary">
+            <div class="summary-row">
+              <span>Lahjakortin arvo</span>
+              <strong id="summaryAmount">125</strong>
+            </div>
+            <div class="summary-row">
+              <span>Ostopäivä</span>
+              <strong id="summaryPurchaseDate"></strong>
+            </div>
+            <div class="summary-row">
+              <span>Voimassa asti</span>
+              <strong id="summaryExpiry"></strong>
+            </div>
+            <div class="summary-row total">
+              <span>Yhteensä</span>
+              <span id="summaryTotal">125</span>
+            </div>
+          </div>
+
+          <div class="error-text" id="errorMessage"></div>
+
+          <button type="submit" class="purchase-btn">Siirry maksuun</button>
+        </form>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const stripeLinksByAmount = {
+      125: "https://buy.stripe.com/cN2bMra6Zf0U3BeeVg",
+      150: "https://buy.stripe.com/8wMeYD4MF3icb3G9AY",
+      200: "https://buy.stripe.com/aEU9EjdjbcSM9ZC00p",
+      250: "https://buy.stripe.com/cN2dUz4MF1a4dbOeVk",
+      300: "https://buy.stripe.com/bIYdUzcf72e8fjW4gH",
+      350: "https://buy.stripe.com/3cs7wb6UN4mg3BeeVm",
+      400: "https://buy.stripe.com/bIY9Ej0wp1a47RucNf",
+      450: "https://buy.stripe.com/dR64jZ1Atf0Ub3G3cG",
+      500: "https://buy.stripe.com/aEU9EjdjbaKEfjW8x1",
+      550: "https://buy.stripe.com/28oeYD1At8CwefS5kQ",
+      600: "https://buy.stripe.com/9AQ5o3cf74mgefS00x",
+      650: "https://buy.stripe.com/6oEaIn1At5qk8Vy6oW",
+      700: "https://buy.stripe.com/7sIg2H6UNdWQ3BefZx",
+      750: "https://buy.stripe.com/3cseYD1At6uodbO00A",
+      800: "https://buy.stripe.com/fZe7wb3IB9GAdbO00B",
+      850: "https://buy.stripe.com/7sI9Ejgvng4Y6NqcNo",
+      900: "https://buy.stripe.com/28obMrdjb0606NqdRt",
+      950: "https://buy.stripe.com/bIY8AffrjcSM4Fi3cQ",
+      1000: "https://buy.stripe.com/5kAcQv4MFaKE5Jm6p3"
+    };
+
+    const amounts = [125, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000];
+
+    const recipientInput = document.getElementById("recipient");
+    const senderInput = document.getElementById("sender");
+    const buyerEmailInput = document.getElementById("buyerEmail");
+    const recipientEmailInput = document.getElementById("recipientEmail");
+    const previewRecipients = document.querySelectorAll('[data-preview="recipient"]');
+    const previewSenders = document.querySelectorAll('[data-preview="sender"]');
+    const previewExpiries = document.querySelectorAll('[data-preview="expiry"]');
+    const previewAmounts = document.querySelectorAll('[data-preview="amount"]');
+    const summaryAmount = document.getElementById("summaryAmount");
+    const summaryPurchaseDate = document.getElementById("summaryPurchaseDate");
+    const summaryExpiry = document.getElementById("summaryExpiry");
+    const summaryTotal = document.getElementById("summaryTotal");
+    const amountGrid = document.getElementById("amountGrid");
+    const form = document.getElementById("giftCardForm");
+    const errorMessage = document.getElementById("errorMessage");
+    const giftCardShell = document.getElementById("giftCardShell");
+    const giftCardRotator = document.getElementById("giftCardRotator");
+    const sparkLayers = document.querySelectorAll(".spark-layer");
+    const pulseRingLayers = document.querySelectorAll(".pulse-ring-layer");
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    let selectedAmount = 125;
+    let isFlipping = false;
+    let rotationY = 0;
+    let flipTimer = null;
+
+    function sanitizeText(value, fallback) {
+      const clean = value.replace(/\s+/g, " ").trim();
+      return clean || fallback;
+    }
+
+    function setTextGroup(elements, value) {
+      elements.forEach((element) => {
+        element.textContent = value;
+      });
+    }
+
+    function formatDate(date) {
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      return `${day}.${month}.${year}`;
+    }
+
+    function getCurrentLocalDate() {
+      const now = new Date();
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0, 0);
+    }
+
+    function getPurchaseDate() {
+      return getCurrentLocalDate();
+    }
+
+    function getExpiryDateFromPurchaseDate(purchaseDate) {
+      const expiryDate = new Date(purchaseDate);
+      expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+      return expiryDate;
+    }
+
+    function formatAmount(amount) {
+      return String(amount);
+    }
+
+    function clearError() {
+      errorMessage.style.display = "none";
+      errorMessage.textContent = "";
+    }
+
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorMessage.style.display = "block";
+    }
+
+    function refreshActiveAmountButton() {
+      const buttons = amountGrid.querySelectorAll(".amount-btn");
+      buttons.forEach((button) => {
+        button.classList.toggle("active", Number(button.dataset.amount) === selectedAmount);
+      });
+    }
+
+    function updateAmount(amount) {
+      selectedAmount = amount;
+      const formattedAmount = formatAmount(amount);
+      setTextGroup(previewAmounts, formattedAmount);
+      summaryAmount.textContent = formattedAmount;
+      summaryTotal.textContent = formattedAmount;
+      refreshActiveAmountButton();
+    }
+
+    function updateDates() {
+      const purchaseDate = getPurchaseDate();
+      const expiryDate = getExpiryDateFromPurchaseDate(purchaseDate);
+      const formattedPurchaseDate = formatDate(purchaseDate);
+      const formattedExpiryDate = formatDate(expiryDate);
+
+      summaryPurchaseDate.textContent = formattedPurchaseDate;
+      summaryExpiry.textContent = formattedExpiryDate;
+      setTextGroup(previewExpiries, formattedExpiryDate);
+    }
+
+    function updatePreview() {
+      setTextGroup(previewRecipients, sanitizeText(recipientInput.value, ""));
+      setTextGroup(previewSenders, sanitizeText(senderInput.value, ""));
+      updateDates();
+    }
+
+    function buildAmountButtons() {
+      amounts.forEach((amount) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "btn amount-btn";
+        button.dataset.amount = String(amount);
+        button.textContent = formatAmount(amount);
+        button.addEventListener("click", () => {
+          updateAmount(amount);
+          clearError();
+        });
+        amountGrid.appendChild(button);
+      });
+
+      refreshActiveAmountButton();
+    }
+
+    function stopFlipQueue() {
+      if (flipTimer) {
+        window.clearTimeout(flipTimer);
+        flipTimer = null;
+      }
+    }
+
+    function queueFlip() {
+      stopFlipQueue();
+
+      if (prefersReducedMotion.matches || document.hidden) {
+        return;
+      }
+
+      const delay = 9000 + Math.floor(Math.random() * 3500);
+      flipTimer = window.setTimeout(() => {
+        triggerFlip();
+      }, delay);
+    }
+
+    function normalizeRotation() {
+      if (rotationY >= 360) {
+        rotationY -= 360;
+        giftCardRotator.style.transition = "none";
+        giftCardRotator.style.transform = `rotateY(${rotationY}deg)`;
+
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(() => {
+            giftCardRotator.style.transition = "transform 1.45s cubic-bezier(0.22, 0.74, 0.18, 1)";
+          });
+        });
+      }
+    }
+
+    function triggerFlip() {
+      if (prefersReducedMotion.matches || isFlipping) {
+        return;
+      }
+
+      isFlipping = true;
+      stopFlipQueue();
+      rotationY += 180;
+      giftCardRotator.style.transform = `rotateY(${rotationY}deg)`;
+    }
+
+    function finishFlip() {
+      isFlipping = false;
+      normalizeRotation();
+      queueFlip();
+    }
+
+    function createSpark(xPercent, yPercent) {
+      const spark = document.createElement("span");
+      const size = 5 + Math.random() * 10;
+      const dx = `${-70 + Math.random() * 140}px`;
+      const dy = `${55 + Math.random() * 130}px`;
+      const duration = `${700 + Math.random() * 900}ms`;
+
+      spark.className = `spark${Math.random() > 0.35 ? " spark--star" : ""}`;
+      spark.style.setProperty("--x", `${xPercent}%`);
+      spark.style.setProperty("--y", `${yPercent}%`);
+      spark.style.setProperty("--dx", dx);
+      spark.style.setProperty("--dy", dy);
+      spark.style.setProperty("--dur", duration);
+      spark.style.setProperty("--size", `${size}px`);
+
+      spark.addEventListener("animationend", () => {
+        spark.remove();
+      });
+
+      return spark;
+    }
+
+    function createPulseRing(xPercent, yPercent, index) {
+      const ring = document.createElement("span");
+      const duration = `${900 + index * 140}ms`;
+      const delay = `${index * 85}ms`;
+      const scale = String(2.8 + index * 1.15);
+
+      ring.className = "pulse-ring";
+      ring.style.setProperty("--x", `${xPercent}%`);
+      ring.style.setProperty("--y", `${yPercent}%`);
+      ring.style.setProperty("--dur", duration);
+      ring.style.setProperty("--delay", delay);
+      ring.style.setProperty("--scale", scale);
+
+      ring.addEventListener("animationend", () => {
+        ring.remove();
+      });
+
+      return ring;
+    }
+
+    function burstSparks(clientX, clientY) {
+      const rect = giftCardShell.getBoundingClientRect();
+      const x = ((clientX - rect.left) / rect.width) * 100;
+      const y = ((clientY - rect.top) / rect.height) * 100;
+
+      sparkLayers.forEach((layer) => {
+        for (let index = 0; index < 24; index += 1) {
+          layer.appendChild(createSpark(x, y));
+        }
+      });
+
+      pulseRingLayers.forEach((layer) => {
+        for (let index = 0; index < 4; index += 1) {
+          layer.appendChild(createPulseRing(x, y, index));
+        }
+      });
+    }
+
+    function clearOldOrderCache() {
+      try {
+        const raw = localStorage.getItem("inkyvibesGiftCardOrder");
+        if (!raw) {
+          return;
+        }
+
+        const parsed = JSON.parse(raw);
+        const createdAt = Number(parsed.createdAt || 0);
+        const maxAge = 1000 * 60 * 60 * 6;
+
+        if (!createdAt || Date.now() - createdAt > maxAge) {
+          localStorage.removeItem("inkyvibesGiftCardOrder");
+        }
+      } catch {
+        localStorage.removeItem("inkyvibesGiftCardOrder");
+      }
+    }
+
+    function buildOrderData() {
+      const purchaseDate = getPurchaseDate();
+      const expiryDate = getExpiryDateFromPurchaseDate(purchaseDate);
+
+      return {
+        orderToken: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+        recipient: sanitizeText(recipientInput.value, ""),
+        sender: sanitizeText(senderInput.value, ""),
+        buyerEmail: buyerEmailInput.value.trim(),
+        recipientEmail: recipientEmailInput.value.trim(),
+        amount: selectedAmount,
+        purchaseDate: formatDate(purchaseDate),
+        expiryDate: formatDate(expiryDate),
+        createdAt: Date.now(),
+        cardImageSrc: "inkvibesgiftcard.jpg"
+      };
+    }
+
+    recipientInput.addEventListener("input", updatePreview);
+    senderInput.addEventListener("input", updatePreview);
+
+    giftCardShell.addEventListener("pointerdown", (event) => {
+      burstSparks(event.clientX, event.clientY);
+      triggerFlip();
+    });
+
+    giftCardRotator.addEventListener("transitionend", (event) => {
+      if (event.propertyName === "transform") {
+        finishFlip();
+      }
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        stopFlipQueue();
+        return;
+      }
+
+      updateDates();
+      queueFlip();
+    });
+
+    if (typeof prefersReducedMotion.addEventListener === "function") {
+      prefersReducedMotion.addEventListener("change", () => {
+        if (prefersReducedMotion.matches) {
+          stopFlipQueue();
+          return;
+        }
+        queueFlip();
+      });
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      clearError();
+
+      const stripeLink = stripeLinksByAmount[selectedAmount];
+      if (!stripeLink) {
+        showError("Tälle summalle ei löytynyt Stripe-linkkiä.");
+        return;
+      }
+
+      const orderData = buildOrderData();
+      localStorage.setItem("inkyvibesGiftCardOrder", JSON.stringify(orderData));
+      window.location.href = stripeLink;
+    });
+
+    clearOldOrderCache();
+    buildAmountButtons();
+    updateAmount(125);
+    updatePreview();
+    queueFlip();
+  </script>
+</body>
+</html>
